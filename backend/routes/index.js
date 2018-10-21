@@ -222,7 +222,7 @@ setInterval(function(){
 // If key exists in table, add value to the list.
 // Otherwise, make a new entry in table: key -> [value]
 function upsert(table, keyName, key, valueListName, value) {
-    table.doc(key).get().then( doc => {
+    return table.doc(key).get().then( doc => {
         console.log("upserting value", value, " into list:", valueListName);
         if (!doc.exists) {
             console.log("Creating new record");
@@ -230,14 +230,17 @@ function upsert(table, keyName, key, valueListName, value) {
             record[keyName]=key;
             record[valueListName]= [value];
             table.doc(key).set(record);
+            return true;
         } else {
             var record = doc.data();
             if (!record[valueListName].includes(value)){
                 console.log("Updating existing record");
                 record[valueListName].push(value);
                 table.doc(key).set(record);
+                return true;
             } else {
                 console.log("Record already exists. Not updating");
+                return false;
             }
         }
     });
@@ -269,8 +272,8 @@ router.get('/books', function(req, res, next) {
         console.log("Post did not contain a necessary param.");
         res.status('400').end();
     } else {
-        books_required.doc(Email).get().then( required => {
-            books_owned.doc(Email).get().then( owned => {
+        books_requested.doc(Email).get().then( required => {
+            books_offered.doc(Email).get().then( owned => {
                 req = ""
                 own = ""
                 if (required.exists) {
@@ -296,10 +299,15 @@ router.post('/book_owned', function(req, res, next) {
         console.log("Post did not contain a necessary param.");
         res.status('400').end();
     } else {
-        upsert(books_owned, "email", Email, "books", Isbn);
-        upsert(users_with_book, "book", Isbn, "emails", Email);
+        var updated1 = upsert(books_offered, "email", Email, "books", Isbn);
+        var updated2 = upsert(users_offering_book, "book", Isbn, "emails", Email);
+        updated1.then( worked => {
+            updated2.then( worked => {
+                // respond 201 whether or not it was a duplicate, for now
+                res.status('201').end();
+            });
+        });
     }
-    res.status('201').end();
 });
 
 router.post('/book_required', function(req, res, next) {
@@ -309,10 +317,15 @@ router.post('/book_required', function(req, res, next) {
         console.log("Post did not contain a necessary param.");
         res.status('400').end();
     } else {
-        upsert(books_required, "email", Email, "books", Isbn);
-        upsert(users_wanting_book, "book", Isbn, "emails", Email);
+        var updated1 = upsert(books_requested, "email", Email, "books", Isbn);
+        var updated2 = upsert(users_requesting_book, "book", Isbn, "emails", Email);
+        updated1.then( worked => {
+            updated2.then( worked => {
+                // respond 201 whether or not it was a duplicate, for now
+                res.status('201').end();
+            });
+        });
     }
-    res.status('201').end();
 });
 
 
