@@ -168,20 +168,29 @@ router.get('/notifications', function(req, res, next){
     }
 });
 
-// might be broken :(
 router.get('/books', function(req, res, next) {
-    var Email = req.body.email;
+    var Email = req.query.email;
 
     if(Email === undefined){
         console.log("Post did not contain a necessary param.");
         res.status('400').end();
     } else {
-        var required = books_required.doc(Email).books;
-        var owned = books_owned.doc(Email).books;
-        console.log(required, owned)
-        res.setHeader('Content-Type', 'application/json');
-        res.send(JSON.stringify({ "books_required" : required,
-                                "books_owned" : owned}));
+        books_required.doc(Email).get().then( required => {
+            books_owned.doc(Email).get().then( owned => {
+                req = ""
+                own = ""
+                if (required.exists) {
+                    req = required.data().books;
+                }
+                if (owned.exists){
+                    own = owned.data().books;
+                }
+                console.log(req, own)
+                res.setHeader('Content-Type', 'application/json');
+                res.send(JSON.stringify({ "books_required" : req,
+                        "books_owned" : own}));
+            });
+        });
     }
 });
 
