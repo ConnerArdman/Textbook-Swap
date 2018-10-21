@@ -191,12 +191,14 @@ setInterval(function(){
         books_offered.get().then(all_books_owned => {
             users_requesting_book.get().then(all_users_wanting_book => {
                 users_offering_book.get().then(all_users_with_book => {
-                    notifications.get().then(all_users_with_book => {
+                    notifications.get().then(notifs => {
                       var allMatches = [];
-                      var usersIt = users_requesting_book.keys();
+                      console.log(all_users_wanting_book)
+                      var usersIt = all_users_wanting_book.data().keys();
+                      console.log(usersIt);
                       for (let user = usersIt.next(); user.done != true; user = usersIt.next()) {
                         var username = user.value;
-                        var userMatches = findMatches(username, users_requesting_book.get(username), books_requested, books_offered, users_requesting_book, users_offering_book);
+                        var userMatches = findMatches(username, all_users_wanting_book.get(username), all_books_required, all_books_owned, all_users_wanting_book, all_users_with_book);
                         if (userMatches.length > 0) {
                           allMatches.push(userMatches);
                         }
@@ -216,7 +218,7 @@ setInterval(function(){
             })
         })
     })
-}, 1200000 /*every 20 mins*/);
+}, 2000 /*1200000 every 20 mins*/);
 
 // Table is a map from a key to a list of values.
 // If key exists in table, add value to the list.
@@ -250,7 +252,9 @@ router.get('/notifications', function(req, res, next){
     var Email = req.query.email;
     if(Email === undefined){
         console.log("Post did not contain a necessary param.");
-        res.status('400').end();
+        // for now, send dummy data
+        res.send(JSON.stringify({ "notifications" : [ [{email : "yaacov.tarko@ucla.edu", book : "0131175327"}, {email : "eperrine@stanford.edu", book: "0385333846"} ] ]}));
+        //res.status('400').end();
     } else {
             notifications.doc(Email).get().then( doc => {
 
@@ -259,7 +263,8 @@ router.get('/notifications', function(req, res, next){
                 console.log(doc.data().matches)
                 res.send(JSON.stringify({ "notifications": doc.data().matches}));
             } else {
-                res.send(JSON.stringify({ "notifications" : ""}));
+            // for now, send dummy data
+                res.send(JSON.stringify({ "notifications" : [ [{email : "yaacov.tarko@ucla.edu", book : "0131175327"}, {email : "eperrine@stanford.edu", book: "0385333846"} ] ]}));
             }
         });
     }
