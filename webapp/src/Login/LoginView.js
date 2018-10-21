@@ -1,12 +1,14 @@
 import React from "react";
+import './login.css';
 
 const LoginView = ({ onSubmit }) => {
   return (
-    <div>
+    <div className="login-container">
       <h1>Log In</h1>
       <form onSubmit={onSubmit}>
+      <div className="form-container">
         <label>
-          Email
+          Email&nbsp;
           <input
             name="email"
             type="email"
@@ -14,14 +16,17 @@ const LoginView = ({ onSubmit }) => {
           />
         </label>
         <label>
-          Password
+          Password&nbsp;
           <input
             name="password"
             type="password"
             placeholder="Password"
           />
         </label>
-        <button type="submit">Log in</button>
+      </div>
+      <div className="button-container">
+         <button type="submit">Log in</button>
+      </div>
       </form>
     </div>
   );
