@@ -2,15 +2,112 @@ import React from 'react';
 import {
   Image,
   Platform,
+  SectionList,
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { WebBrowser } from 'expo';
 
-import { MonoText } from '../components/StyledText';
+const dummyBooks = [
+  {
+    "publishers": [{
+          "name": "Springer-Verlag"
+      }],
+      "pagination": "xiv, p. 646-934, [51] p. :",
+      "identifiers": {
+          "lccn": ["84005479"],
+          "openlibrary": ["OL2843509M"],
+          "isbn_10": ["0387909850"],
+          "goodreads": ["2710459"],
+          "librarything": ["1294490"]
+      },
+      "classifications": {
+          "dewey_decimal_class": ["515"],
+          "lc_classifications": ["QA303 .M33724 1985"]
+      },
+      "title": "Calculus III",
+      "url": "http://openlibrary.org/books/OL2843509M/Calculus_III",
+      "notes": "Previous ed. published in 1980 as chapters 13-18 of Calculus.\nIncludes index.",
+      "number_of_pages": 934,
+      "cover": {
+          "small": "https://covers.openlibrary.org/b/id/245257-S.jpg",
+          "large": "https://covers.openlibrary.org/b/id/245257-L.jpg",
+          "medium": "https://covers.openlibrary.org/b/id/245257-M.jpg"
+      },
+      "subjects": [{
+          "url": "https://openlibrary.org/subjects/calculus",
+          "name": "Calculus"
+      }],
+      "publish_date": "1985",
+      "key": "/books/OL2843509M",
+      "authors": [{
+          "url": "http://openlibrary.org/authors/OL236454A/Jerrold_E._Marsden",
+          "name": "Jerrold E. Marsden"
+      }],
+      "by_statement": "Jerrold Marsden, Alan Weinstein.",
+      "publish_places": [{
+          "name": "New York"
+      }]
+  },
+  { 
+    "publishers": [{
+          "name": "Addison-Wesley"
+      }],
+      "pagination": "xiii, 657 p. :",
+      "identifiers": {
+          "lccn": ["93040325"],
+          "openlibrary": ["OL1429049M"],
+          "isbn_10": ["0201558025"],
+          "wikidata": ["Q15303722"],
+          "librarything": ["45844"],
+          "goodreads": ["112243"]
+      },
+      "subtitle": "a foundation for computer science",
+      "title": "Concrete mathematics",
+      "url": "http://openlibrary.org/books/OL1429049M/Concrete_mathematics",
+      "classifications": {
+          "dewey_decimal_class": ["510"],
+          "lc_classifications": ["QA39.2 .G733 1994"]
+      },
+      "notes": "Includes bibliographical references (p. 604-631) and index.",
+      "number_of_pages": 657,
+      "cover": {
+          "small": "https://covers.openlibrary.org/b/id/135182-S.jpg",
+          "large": "https://covers.openlibrary.org/b/id/135182-L.jpg",
+          "medium": "https://covers.openlibrary.org/b/id/135182-M.jpg"
+      },
+      "subjects": [{
+          "url": "https://openlibrary.org/subjects/computer_science",
+          "name": "Computer science"
+      }, {
+          "url": "https://openlibrary.org/subjects/mathematics",
+          "name": "Mathematics"
+      }],
+      "publish_date": "1994",
+      "key": "/books/OL1429049M",
+      "authors": [{
+          "url": "http://openlibrary.org/authors/OL720958A/Ronald_L._Graham",
+          "name": "Ronald L. Graham"
+      }, {
+          "url": "http://openlibrary.org/authors/OL229501A/Donald_Knuth",
+          "name": "Donald Knuth"
+      }, {
+          "url": "http://openlibrary.org/authors/OL2669938A/Oren_Patashnik",
+          "name": "Oren Patashnik"
+      }],
+      "by_statement": "Ronald L. Graham, Donald E. Knuth, Oren Patashnik.",
+      "publish_places": [{
+          "name": "Reading, Mass"
+      }],
+      "ebooks": [{
+          "formats": {},
+          "preview_url": "https://archive.org/details/concretemathemat00grah_444",
+          "availability": "restricted"
+      }]
+  }
+]
 
 export default class HomeScreen extends React.Component {
   static navigationOptions = {
@@ -21,45 +118,28 @@ export default class HomeScreen extends React.Component {
     return (
       <View style={styles.container}>
         <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-          <View style={styles.welcomeContainer}>
-            <Image
-              source={
-                __DEV__
-                  ? require('../assets/images/robot-dev.png')
-                  : require('../assets/images/robot-prod.png')
-              }
-              style={styles.welcomeImage}
+            <SectionList
+              sections={[
+                {title: 'Searching for', data: dummyBooks},
+                {title: 'Able to swap', data: dummyBooks}
+              ]}
+              renderItem={({item}) => 
+              <View style={styles.bookitem}>
+                <Image
+                  style={{width: 50, height: 50}}
+                  source={{uri: item.cover.medium }}
+                />
+                <View style={styles.booktext}>
+                  <Text style={styles.booktitle}>{item.title}</Text>
+                  <Text style={styles.bookauthors}>{item.authors[0].name}</Text>
+                </View>
+              </View>}
+      
+              renderSectionHeader={({section}) => 
+              <Text style={styles.listheader}>{section.title}</Text>}
+              keyExtractor={(item, index) => index}
             />
-          </View>
-
-          <View style={styles.getStartedContainer}>
-            {this._maybeRenderDevelopmentModeWarning()}
-
-            <Text style={styles.getStartedText}>Get started by opening</Text>
-
-            <View style={[styles.codeHighlightContainer, styles.homeScreenFilename]}>
-              <MonoText style={styles.codeHighlightText}>screens/HomeScreen.js</MonoText>
-            </View>
-
-            <Text style={styles.getStartedText}>
-              Change this text and your app will automatically reload.
-            </Text>
-          </View>
-
-          <View style={styles.helpContainer}>
-            <TouchableOpacity onPress={this._handleHelpPress} style={styles.helpLink}>
-              <Text style={styles.helpLinkText}>Help, it didn’t automatically reload!</Text>
-            </TouchableOpacity>
-          </View>
         </ScrollView>
-
-        <View style={styles.tabBarInfoContainer}>
-          <Text style={styles.tabBarInfoText}>This is a tab bar. You can edit it in:</Text>
-
-          <View style={[styles.codeHighlightContainer, styles.navigationFilename]}>
-            <MonoText style={styles.codeHighlightText}>navigation/MainTabNavigator.js</MonoText>
-          </View>
-        </View>
       </View>
     );
   }
@@ -102,6 +182,31 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  bookitem: {
+    padding: 10,
+    display: "flex",
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    width: '100%'
+  },
+  listheader: {
+    fontSize: 24,
+    backgroundColor: '#eee',
+    paddingLeft: 10,
+  },
+  booktext: {
+    display: "flex",
+    flexDirection: 'column',
+  },
+
+  booktitle: {
+    fontSize: 16,
+    paddingLeft: 10,
+  },
+  bookauthors: {
+    fontSize: 12,
+    paddingLeft: 10,
   },
   developmentModeText: {
     marginBottom: 20,
