@@ -218,7 +218,7 @@ setInterval(function(){
             })
         })
     })
-}, 1200000 every 20 mins);
+}, 2000 /*1200000 every 20 mins*/);
 
 // Table is a map from a key to a list of values.
 // If key exists in table, add value to the list.
@@ -253,7 +253,7 @@ router.get('/notifications', function(req, res, next){
     if(Email === undefined){
         console.log("Post did not contain a necessary param.");
         // for now, send dummy data
-        res.send(JSON.stringify({ "notifications" : [ [{email : "yaacov.tarko@ucla.edu", book : "0131175327"}, {email : eperrine@stanford.edu, book: "0385333846"} ] ]}));
+        res.send(JSON.stringify({ "notifications" : [ [{email : "yaacov.tarko@ucla.edu", book : "0131175327"}, {email : "eperrine@stanford.edu", book: "0385333846"} ] ]}));
         //res.status('400').end();
     } else {
             notifications.doc(Email).get().then( doc => {
@@ -263,8 +263,8 @@ router.get('/notifications', function(req, res, next){
                 console.log(doc.data().matches)
                 res.send(JSON.stringify({ "notifications": doc.data().matches}));
             } else {
-                // for now, send dummy data
-                res.send(JSON.stringify({ "notifications" : [ [{email : "yaacov.tarko@ucla.edu", book : "0131175327"}, {email : eperrine@stanford.edu, book: "0385333846"} ] ]}));
+            // for now, send dummy data
+                res.send(JSON.stringify({ "notifications" : [ [{email : "yaacov.tarko@ucla.edu", book : "0131175327"}, {email : "eperrine@stanford.edu", book: "0385333846"} ] ]}));
             }
         });
     }
