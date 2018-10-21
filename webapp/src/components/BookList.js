@@ -40,7 +40,7 @@ export default class BookList extends React.Component {
                 this.state.bookData.map((item) => 
                     <div className="list-group-item bookitem">
                         <img className="img-rounded bookimage"
-                             src={ typeof item.cover === "undefined" ? "" : item.cover.medium}
+                             src={ typeof item.cover === "undefined" ? "https://www.honeystinger.com/c.3410322/sca-dev-elbrus/img/no_image_available.jpeg" : item.cover.medium}
                               alt={item.title} />
                         <div className="booktext">
                             <div className="booktitle">{item.title}</div>
