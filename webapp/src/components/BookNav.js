@@ -47,7 +47,7 @@ export default class BookNav extends React.Component {
      });
 
       // TODO: use util function to request my ISBNs from the server
-      // let response = ["0385333846", "0131175327", "0984782869"];
+      // let response = ["0385333846", "0984782869"];
       // this.setState({
       //   currentTab: 1,
       //   data: response
@@ -70,9 +70,13 @@ export default class BookNav extends React.Component {
 
   sendBook() {
      if (this.state.currentTab === 0) {
-        postBookRequired(window.email, this.state.currentAddedBook);
+        postBookRequired(window.email, this.state.currentAddedBook).then(data => {
+           this.getMySearches();
+        });
      } else {
-        postBookOwned(window.email, this.state.currentAddedBook);
+        postBookOwned(window.email, this.state.currentAddedBook).then(data => {
+           this.getMyPostings();
+        });
      }
   }
 

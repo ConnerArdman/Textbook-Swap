@@ -34,11 +34,11 @@ export function getBooks(email) {
 }
 
 export function postBookOwned(email, isbn) {
-   postBook(email, isbn, 'book_owned');
+   return postBook(email, isbn, 'book_owned');
 }
 
 export function postBookRequired(email, isbn) {
-   postBook(email, isbn, 'book_required');
+   return postBook(email, isbn, 'book_required');
 }
 
 function postBook(email, isbn, endpoint) {
@@ -48,7 +48,7 @@ function postBook(email, isbn, endpoint) {
    };
 
    const url = 'https://textbookswapbackend.appspot.com/' + endpoint;
-   fetch(url, {
+   return fetch(url, {
                method: "POST",
                body: JSON.stringify(data),
                headers: {
