@@ -76,7 +76,7 @@ router.post('/login', function(req, res, next) {
       .then(function(userRecord) {
         // See the UserRecord reference doc for the contents of userRecord.
         console.log("Successfully fetched user data:", userRecord.toJSON());
-        // check password and send auth token if they match
+        // TODO: check passcode and 
         admin.auth().createCustomToken(userRecord.uid)
           .then(function(customToken) {
             // Send token back to client
@@ -103,8 +103,39 @@ const settings = {/* your settings... */ timestampsInSnapshots: true};
 db.settings(settings);
 
 
+// The following maps go from keys to lists of values 
+// map book ISBNs -> user emails
 var books_required = db.collection('books_required');
 var books_owned = db.collection('books_owned');
+
+// maps user emails -> book ISBNs 
+var users_wanting_book = db.collection('users_wanting_book');
+var users_with_book = db.collection('users_with_book');
+
+// Table is a map from a key to a list of values.
+// If key exists in table, add value to the list. 
+// Otherwise, make a new entry in table: key -> [value]
+function upsert(table, keyName, key, valueListName, value) {
+    table.doc(key).get().then( doc => {
+        console.log("upserting value", value, " into list:", valueListName);
+        if (!doc.exists) {
+            console.log("Creating new record");
+            var record = {};
+            record[keyName]=key;
+            record[valueListName]= [value];
+            table.doc(key).set(record);
+        } else {
+            var record = doc.data();
+            if (!record[valueListName].includes(value)){
+                console.log("Updating existing record");
+                record[valueListName].push(value);
+                table.doc(key).set(record); 
+            } else {
+                console.log("Record already exists. Not updating");
+            }
+        }
+    });
+}
 
 router.get('/books', function(req, res, next) {
     var Email = req.email;
@@ -122,6 +153,7 @@ router.get('/books', function(req, res, next) {
     }
 });
 
+
 router.post('/book_owned', function(req, res, next) {
     var Email = req.body.email;
     var Isbn = req.body.isbn;
@@ -129,32 +161,8 @@ router.post('/book_owned', function(req, res, next) {
         console.log("Post did not contain a necessary param.");
         res.status('400').end();
     } else {
-        console.log("Willing to swap book: ", Isbn);
-        books_owned.doc(Email).get().then( doc => {
-            if(!doc.exists) {
-                console.log("Creating new record")
-                var record = {
-                    email: Email,
-                    books: [ Isbn ]
-                }
-                console.log(record);
-                books_owned.doc(Email).set(record);
-            }
-            else {
-                //var record = doc.data();
-                var record = doc.data();
-                console.log(record);
-                if (!record.books.includes(Isbn)){
-                    console.log("Updating record")
-                    record.books.push(Isbn);
-                    console.log(record);
-                    books_owned.doc(Email).set(record);
-                }
-                else {
-                    console.log("Book already offered. Not updating");
-                }            
-            } 
-        });
+        upsert(books_owned, "email", Email, "books", Isbn);
+        upsert(users_with_book, "book", Isbn, "emails", Email); 
     }
     res.status('201').end();
 });
@@ -166,31 +174,8 @@ router.post('/book_required', function(req, res, next) {
         console.log("Post did not contain a necessary param.");
         res.status('400').end();
     } else {
-        console.log("Wants book: ", Isbn);
-        books_required.doc(Email).get().then( doc => {
-            if(!doc.exists) {
-                console.log("Creating new record")
-                var record = {
-                    email: Email,
-                    books: [ Isbn ]
-                }
-                console.log(record);
-                books_required.doc(Email).set(record);
-            }
-            else {
-                var record = doc.data();
-                console.log(record);
-                if (!record.books.includes(Isbn)){
-                    console.log("Updating record")
-                    record.books.push(Isbn);
-                    console.log(record);
-                    books_required.doc(Email).set(record);
-                }
-                else {
-                    console.log("Book already requested. Not updating");
-                }            
-            } 
-        });
+        upsert(books_required, "email", Email, "books", Isbn);
+        upsert(users_wanting_book, "book", Isbn, "emails", Email); 
     }
     res.status('201').end();
 });
