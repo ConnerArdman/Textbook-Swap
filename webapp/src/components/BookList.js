@@ -9,12 +9,12 @@ export default class BookList extends React.Component {
     this.state = {
       bookData: []
     };
-  
+
   }
 
-  componentWillReceiveProps() {
+  componentWillReceiveProps(props) {
     var self = this;
-    getBookInformation(this.props.isbnList).then(
+    getBookInformation(props.isbnList).then(
       function(data){
         self.setState({
           bookData: Object.values(data)
@@ -24,21 +24,21 @@ export default class BookList extends React.Component {
   }
 
   render() {
-    console.log(this.props);   
-    console.log(this.state);   
-    if (typeof this.state.bookData === "undefined" || this.state.bookData.length == 0) {
+    console.log(this.props);
+    console.log(this.state);
+    if (typeof this.state.bookData === "undefined" || this.state.bookData.length === 0) {
       return (
         <div>
           <p>Add a book!</p>
         </div>
       )
-    } else {        
+    } else {
       return (
         <div>
             <ul className="list-group">
             {
-                this.state.bookData.map((item) => 
-                    <div className="list-group-item bookitem">
+                this.state.bookData.map((item, index) =>
+                    <div className="list-group-item bookitem" key={index}>
                         <img className="img-rounded bookimage"
                              src={ typeof item.cover === "undefined" ? "https://www.honeystinger.com/c.3410322/sca-dev-elbrus/img/no_image_available.jpeg" : item.cover.medium}
                               alt={item.title} />

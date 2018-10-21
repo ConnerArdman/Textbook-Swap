@@ -10,3 +10,25 @@ a.active {
     color: #fff;
     background: rgb(0,122,255);
 }
+
+.newBook {
+   text-align: center;
+   margin-top: 20px;
+   margin-bottom: 20px;
+}
+
+.newBook input {
+   border: 1px solid black;
+   margin: 5px;
+   height: 28px;
+}
+
+.newBook button {
+   margin: 5px;
+   height: 28px;
+}
+
+p {
+   margin-top: 20px;
+   text-align: center;
+}

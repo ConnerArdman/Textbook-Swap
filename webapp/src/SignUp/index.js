@@ -12,6 +12,7 @@ class SignUpContainer extends Component {
       await app
         .auth()
         .createUserWithEmailAndPassword(email.value, password.value);
+      window.email = email.value;
       this.props.history.push("/");
     } catch (error) {
       alert(error);

@@ -12,9 +12,12 @@ export function getBookInformation(isbns) {
    if (typeof isbns === "undefined") {
        isbns = [];
    }
-   isbns.forEach(isbn => {
+   //isbns.forEach(isbn => {
+   for (const isbn of isbns) {
       isbnParam += 'ISBN:' + isbn + ',';
-   });
+   }
+   console.log(apiEndpoint + isbnParam + apiExtraParams);
+   //});
    return fetch(apiEndpoint + isbnParam + apiExtraParams).then(checkStatus).then(JSON.parse).catch(console.log);
 }
 
@@ -22,7 +25,7 @@ export function getBookInformation(isbns) {
 // books_required: [book1, book2, etc]
 // books_owned: [book1, book2, etc]
 export function getBooks(email) {
-   const url = 'http://localhost:3000/books?email=';
+   const url = 'https://textbookswapbackend.appspot.com/books?email=';
    return fetch(url + email, {
       headers: {
          'Content-Type': 'application/x-www-form-urlencoded'
@@ -44,7 +47,7 @@ function postBook(email, isbn, endpoint) {
       isbn: isbn
    };
 
-   const url = 'http://localhost:3000/' + endpoint;
+   const url = 'https://textbookswapbackend.appspot.com/' + endpoint;
    fetch(url, {
                method: "POST",
                body: JSON.stringify(data),
