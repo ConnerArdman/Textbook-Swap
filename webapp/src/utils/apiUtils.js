@@ -9,6 +9,9 @@ export function getBookInformation(isbns) {
    const apiEndpoint = 'https://openlibrary.org/api/books?bibkeys=';
    const apiExtraParams = '&format=json&jscmd=data'
    let isbnParam = '';
+   if (typeof isbns === "undefined") {
+       isbns = [];
+   }
    isbns.forEach(isbn => {
       isbnParam += 'ISBN:' + isbn + ',';
    });
