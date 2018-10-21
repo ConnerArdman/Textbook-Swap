@@ -8,12 +8,12 @@ export default class BookList extends React.Component {
     super(props)
     this.state = {
       bookData: [],
-      isbns: []
+      isbns: props.isbns
     };
   
   }
 
-  componentWillUpdate() {
+  componentWillMount() {
     var self = this;
     getBookInformation(this.state.isbns).then(
       function(data){
@@ -27,6 +27,7 @@ export default class BookList extends React.Component {
 
 
   render() {   
+    console.log(this.state);
     if (typeof this.state.bookData === "undefined" || this.state.bookData.length == 0) {
       return (
         <div>
@@ -47,7 +48,7 @@ export default class BookList extends React.Component {
                             <div style={styles.bookauthors}>
                                 {
                                     typeof item.authors === "undefined" || item.authors.length === 0 ? "Author(s) unavailable" :
-                                    item.autxhors.map((x)=>(x.name)).join(", ")
+                                    item.authors.map((x)=>(x.name)).join(", ")
                                 }
                             </div>
                         </div>

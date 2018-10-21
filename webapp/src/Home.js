@@ -5,7 +5,7 @@ const Home = () => {
   return (
     <div>
       <h1>Home</h1>
-      <BookList>{{"isbns" : ["0201558025", "9780262533058", "0345803485"]}}</BookList>
+      <BookList title="Books you have" isbns={["0201558025", "9780262533058", "0345803485"]}></BookList>
     </div>
   );
 };
