@@ -1,0 +1,26 @@
+div.bookitem {
+    padding: 10;
+    display: "flex";
+    background: '#fff';
+    width: '100%';
+}
+div.listheader {
+    font-size: 24;
+    background: '#eee';
+    padding-left: 10;
+}
+div.booktext {
+    display: "flex";
+}
+div.booktitle {
+    font-size: 16;
+    padding-left: 10;
+}
+div.bookauthors {
+    font-size: 12;
+    padding-left: 10;
+}
+div.bookimage {
+    height: "75px";
+    width: "75px;"
+}
