@@ -11,6 +11,9 @@ admin.initializeApp({
   databaseURL: 'https://textbook-match.firebaseio.com/'
 });
 
+// on a timer, run the algo to create matchings and push resulting matchings to user phones
+var pushNotifs = admin.messaging();
+
 
 
 /* GET home page. */
@@ -75,7 +78,6 @@ router.post('/login', function(req, res, next) {
         // See the UserRecord reference doc for the contents of userRecord.
         console.log("Successfully fetched user data:", userRecord.toJSON());
         // check password and send auth token if they match
-        console.log(userRecord);
         admin.auth().createCustomToken(userRecord.uid)
           .then(function(customToken) {
             // Send token back to client
@@ -95,19 +97,106 @@ router.post('/login', function(req, res, next) {
 
 });
 
+// store & retrieve data related to each account's wish list and books they're willing to trade
+var db = admin.firestore()
+
+// just to silence a warning
+const settings = {/* your settings... */ timestampsInSnapshots: true};
+db.settings(settings);
+
+
+var books_required = db.collection('books_required');
+var books_owned = db.collection('books_owned');
+
 router.get('/books', function(req, res, next) {
-  res.setHeader('Content-Type', 'application/json');
-  res.send(JSON.stringify({ "books_required" : [ 9780262033848,  9780133594140, 0393918858 ],
-                            "books_owned" : [ 9780133594140,  9780199651566, 1138127043 ]} ));
+    var Email = req.email;
+    console.log(Email);
+    // THIS LINE IS A HACK, REMOVE IT
+    Email = "yaacov.tarko@gmail.com"
+    if(Email === undefined){
+        console.log("Post did not contain a necessary param.");
+        res.status('400').end();
+    } else {
+        var required = books_required.doc(Email).books;
+        var owned = books_owned.doc(Email).books;
+        console.log(required, owned)
+        res.setHeader('Content-Type', 'application/json');
+        res.send(JSON.stringify({ "books_required" : required,
+                                "books_owned" : owned}));
+    }
 });
 
-
 router.post('/book_owned', function(req, res, next) {
-  res.status('201').end();
+    var Email = req.body.email;
+    var Isbn = req.body.isbn;
+    if(Email === undefined || Isbn === undefined){
+        console.log("Post did not contain a necessary param.");
+        res.status('400').end();
+    } else {
+        console.log("Willing to swap book: ", Isbn);
+        books_owned.doc(Email).get().then( doc => {
+            if(!doc.exists) {
+                console.log("Creating new record")
+                var record = {
+                    email: Email,
+                    books: [ Isbn ]
+                }
+                console.log(record);
+                books_owned.doc(Email).set(record);
+            }
+            else {
+                //var record = doc.data();
+                var record = doc.data();
+                console.log(record);
+                if (!record.books.includes(Isbn)){
+                    console.log("Updating record")
+                    record.books.push(Isbn);
+                    console.log(record);
+                    books_owned.doc(Email).set(record);
+                }
+                else {
+                    console.log("Book already offered. Not updating");
+                }            
+            } 
+        });
+    }
+    res.status('201').end();
 });
 
 router.post('/book_required', function(req, res, next) {
-  res.status('201').end();
+    var Email = req.body.email;
+    var Isbn = req.body.isbn;
+    if(Email === undefined || Isbn === undefined){
+        console.log("Post did not contain a necessary param.");
+        res.status('400').end();
+    } else {
+        console.log("Wants book: ", Isbn);
+        books_required.doc(Email).get().then( doc => {
+            if(!doc.exists) {
+                console.log("Creating new record")
+                var record = {
+                    email: Email,
+                    books: [ Isbn ]
+                }
+                console.log(record);
+                books_required.doc(Email).set(record);
+            }
+            else {
+                var record = doc.data();
+                console.log(record);
+                if (!record.books.includes(Isbn)){
+                    console.log("Updating record")
+                    record.books.push(Isbn);
+                    console.log(record);
+                    books_required.doc(Email).set(record);
+                }
+                else {
+                    console.log("Book already requested. Not updating");
+                }            
+            } 
+        });
+    }
+    res.status('201').end();
 });
 
 

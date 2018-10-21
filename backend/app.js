@@ -24,15 +24,6 @@ var indexRouter = require('./routes/index');
 
 app.use('/', indexRouter);
 
-// on a timer, run the algo to create matchings and push resulting matchings to user phones
-var serviceAccount = require('./routes/firebase_admin_key.json');
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  databaseURL: 'https://textbook-match.firebaseio.com/'
-});
-
-var pushNotifs = admin.messaging();
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
