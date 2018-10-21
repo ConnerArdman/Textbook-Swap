@@ -56,24 +56,22 @@ export default class BookNav extends React.Component {
       <div>
         <BookList
           isbnList={this.state.data}></BookList>
-          <div className="booknav">
-        <nav className="nav">
-            <a className={"nav-link" + (this.state.currentTab === 0 ? " active" : "")}
-              href="#"
-              onClick={this.getMySearches}>My Searches</a>
+        <div className="booknav">
+          <nav className="nav nav-pills nav-fill">
+              <a className={"nav-item nav-link" + (this.state.currentTab === 0 ? " active" : "")}
+                href="#"
+                onClick={this.getMySearches}>My Searches</a>
 
-            <a className={"nav-link" + (this.state.currentTab === 1 ? " active" : "") } 
-              href="#"
-              onClick={this.getMyPostings}>My Textbooks</a>
+              <a className={"nav-item nav-link" + (this.state.currentTab === 1 ? " active" : "") } 
+                href="#"
+                onClick={this.getMyPostings}>My Textbooks</a>
 
-            <a className={"nav-link" + (this.state.hasMatches ? "" : " disabled") + (this.state.currentTab === 2 ? " active" : "") }
-              href="#"
-              onClick={(this.state.hasMatches ?  this.getMyMatches : undefined)}>Matches</a>
-        </nav>
+              <a className={"nav-item nav-link" + (this.state.hasMatches ? "" : " disabled") + (this.state.currentTab === 2 ? " active" : "") }
+                href="#"
+                onClick={(this.state.hasMatches ?  this.getMyMatches : undefined)}>Matches</a>
+          </nav>
         </div>
-
       </div>
     );
-  
   }
 }
