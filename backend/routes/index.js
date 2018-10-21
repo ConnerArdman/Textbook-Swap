@@ -22,13 +22,13 @@ router.get('/', function(req, res, next) {
 });
 
 router.post('/signup', function(req, res, next) {
-    var Email = req.body.email; 
+    var Email = req.body.email;
     var Phone = req.body.phone;
     if (Phone.substr(0, 2) != "+1"){
         Phone = "+1"+Phone;
     }
     var Password = req.body.password;
-    var Name = req.body.username; 
+    var Name = req.body.username;
 
     console.log(req.body, "may or may not be undefined");
 
@@ -76,7 +76,7 @@ router.post('/login', function(req, res, next) {
       .then(function(userRecord) {
         // See the UserRecord reference doc for the contents of userRecord.
         console.log("Successfully fetched user data:", userRecord.toJSON());
-        // TODO: check passcode and 
+        // TODO: check passcode and
         admin.auth().createCustomToken(userRecord.uid)
           .then(function(customToken) {
             // Send token back to client
@@ -103,22 +103,91 @@ const settings = {/* your settings... */ timestampsInSnapshots: true};
 db.settings(settings);
 
 
-// The following maps go from keys to lists of values 
+// The following maps go from keys to lists of values
 // map book ISBNs -> user emails
-var books_required = db.collection('books_required');
-var books_owned = db.collection('books_owned');
+var books_requested = db.collection('books_required');
+var books_offered = db.collection('books_owned');
 
-// maps user emails -> book ISBNs 
-var users_wanting_book = db.collection('users_wanting_book');
-var users_with_book = db.collection('users_with_book');
+// maps user emails -> book ISBNs
+var users_requesting_book = db.collection('users_wanting_book');
+var users_offering_book = db.collection('users_with_book');
+
+function traceback(origUser, origTitle, booksMap, usersMap) {
+  var queue = [[[origUser, origTitle]]];
+  while (queue.length > 0) {
+    var path = queue.shift()
+    if (path.length > 5) {
+      return [];
+    }
+    var curTitle = path[path.length - 1][1];
+    if (booksMap.has(curTitle)) {
+      for (var user in booksMap.get(curTitle)) {
+        if (usersMap.has(user)) {
+          for (var title in usersMap.get(user)) {
+            if (user == origUser && title == origTitle) {
+              return path;
+            }
+            queue.push(path.concat([user, title]));
+          }
+        }
+      }
+    }
+  }
+}
+
+function removeFromDatabase(trace, isRequest, books_requested, books_offered, users_requesting_book, users_offering_book) {
+  var prev = trace[trace.length - 1][1];
+  for (var pair in trace) {
+    var user = pair[0];
+    var title = pair[1];
+    if (isRequest) {
+      books_offered.get(prev).splice(books_offered.get(prev).indexOf(user), 1);
+      users_offering_book.get(user).splice(users_offering_book.get(user).indexOf(prev), 1);
+      books_requested.get(title).splice(books_requested.get(title).indexOf(user), 1);
+      users_requesting_book.get(user).splice(users_requesting_book.get(user).indexOf(title), 1);
+    } else {
+      books_offered.get(title).splice(books_offered.get(title).indexOf(user), 1);
+      users_offering_book.get(user).splice(users_offering_book.get(user).indexOf(title), 1);
+      books_requested.get(prev).splice(books_requested.get(prev).indexOf(user), 1);
+      users_requesting_book.get(user).splice(users_requesting_book.get(user).indexOf(prev), 1);
+    }
+    prev = title;
+  }
+}
+
+function findMatches(username, requests, offers, books_requested, books_offered, users_requesting_book, users_offering_book) {
+  if (requests.length > offers.length) {
+    return [[], []];
+  }
+  users_requesting_book.set(username, users_requesting_book.get(username).concat(requests));
+  users_offering_book.set(username, users_offering_book.get(username).concat(offers));
+  var requestMatches = [];
+  var offerMatches = [];
+  for (var request in requests) {
+    var requestTrace = traceback(username, request, books_offered, users_requesting_book);
+    if (requestTrace.length > 0) {
+      requestMatches.push(requestTrace);
+      removeFromDatabase(requestTrace, true, books_requested, books_offered, users_requesting_book, users_offering_book);
+    }
+  }
+  for (var offer in offers) {
+    var offerTrace = traceback(username, offer, books_requested, users_offering_book);
+    if (offerTrace.length > 0) {
+      offerMatches.push(offerTrace);
+      removeFromDatabase(requestTrace, false, books_requested, books_offered, users_requesting_book, users_offering_book);
+    }
+  }
+  return [requestMatches, offerMatches];
+}
 
 // this code runs periodically
 setInterval(function(){
-    books_required.get().then(all_books_required => {
-        books_owned.get().then(all_books_owned => {
-            users_wanting_book.get().then(all_users_wanting_book => {
-                users_with_book.get().then(all_users_with_book => {
-                    // erin's code goes here
+    books_requested.get().then(all_books_required => {
+        books_offeredd.get().then(all_books_owned => {
+            users_requesting_book.get().then(all_users_wanting_book => {
+                users_offering_book.get().then(all_users_with_book => {
+                    var allMatches = [];
+                    for (var user in users_requesting_book)
                 })
             })
         })
@@ -126,7 +195,7 @@ setInterval(function(){
 }, 1200000 /*every 20 mins*/);
 
 // Table is a map from a key to a list of values.
-// If key exists in table, add value to the list. 
+// If key exists in table, add value to the list.
 // Otherwise, make a new entry in table: key -> [value]
 function upsert(table, keyName, key, valueListName, value) {
     table.doc(key).get().then( doc => {
@@ -142,7 +211,7 @@ function upsert(table, keyName, key, valueListName, value) {
             if (!record[valueListName].includes(value)){
                 console.log("Updating existing record");
                 record[valueListName].push(value);
-                table.doc(key).set(record); 
+                table.doc(key).set(record);
             } else {
                 console.log("Record already exists. Not updating");
             }
@@ -175,7 +244,7 @@ router.post('/book_owned', function(req, res, next) {
         res.status('400').end();
     } else {
         upsert(books_owned, "email", Email, "books", Isbn);
-        upsert(users_with_book, "book", Isbn, "emails", Email); 
+        upsert(users_with_book, "book", Isbn, "emails", Email);
     }
     res.status('201').end();
 });
@@ -188,7 +257,7 @@ router.post('/book_required', function(req, res, next) {
         res.status('400').end();
     } else {
         upsert(books_required, "email", Email, "books", Isbn);
-        upsert(users_wanting_book, "book", Isbn, "emails", Email); 
+        upsert(users_wanting_book, "book", Isbn, "emails", Email);
     }
     res.status('201').end();
 });
