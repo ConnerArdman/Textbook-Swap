@@ -154,16 +154,20 @@ setInterval(function(){
 }, 1200000 /*every 20 mins*/);
 
 router.get('/notifications', function(req, res, next){
-    var Email = req.body.email;
+    var Email = req.query.email;
     if(Email === undefined){
         console.log("Post did not contain a necessary param.");
         res.status('400').end();
     } else {
-            var notifications = notifications.doc(Email).get().then( doc => {
+            notifications.doc(Email).get().then( doc => {
             
-            console.log(required, owned)
             res.setHeader('Content-Type', 'application/json');
-            res.send(JSON.stringify({ "notfications": notifications}));
+            if (doc.exists){
+                console.log(doc.data().books)
+                res.send(JSON.stringify({ "notifications": doc.data().books}));
+            } else {
+                res.send(JSON.stringify({ "notifications" : ""}));
+            }
         });
     }
 });
