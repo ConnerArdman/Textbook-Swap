@@ -72,7 +72,6 @@ router.post('/signup', function(req, res, next) {
 
 
 router.post('/login', function(req, res, next) {
-    console.log("Login request: ", req.body);
     admin.auth().getUserByEmail(req.body.email)
       .then(function(userRecord) {
         // See the UserRecord reference doc for the contents of userRecord.
@@ -81,13 +80,12 @@ router.post('/login', function(req, res, next) {
         admin.auth().createCustomToken(userRecord.uid)
           .then(function(customToken) {
             // Send token back to client
+            res.json ({token : customToken});
           })
           .catch(function(error) {
             console.log("Error creating custom token:", error);
+            res.status('500').end();
           });
-
-
-        res.status('201').end();
       })
       .catch(function(error) {
         console.log("Error fetching user data:", error);
