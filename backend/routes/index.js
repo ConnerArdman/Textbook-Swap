@@ -112,6 +112,9 @@ var books_owned = db.collection('books_owned');
 var users_wanting_book = db.collection('users_wanting_book');
 var users_with_book = db.collection('users_with_book');
 
+// maps user emails -> notifications that they'll get when they make an API request for notifications
+var notifications = db.collection('notifications')
+
 // Table is a map from a key to a list of values.
 // If key exists in table, add value to the list. 
 // Otherwise, make a new entry in table: key -> [value]
@@ -136,6 +139,32 @@ function upsert(table, keyName, key, valueListName, value) {
         }
     });
 }
+
+// this code runs periodically
+setInterval(function(){
+    books_required.get().then(all_books_required => {
+        books_owned.get().then(all_books_owned => {
+            users_wanting_book.get().then(all_users_wanting_book => {
+                users_with_book.get().then(all_users_with_book => {
+                    // erin's code goes here
+                })
+            })
+        })
+    })
+}, 1200000 /*every 20 mins*/);
+
+router.get('/notifications', function(req, res, next){
+    var Email = req.email;
+    if(Email === undefined){
+        console.log("Post did not contain a necessary param.");
+        res.status('400').end();
+    } else {
+        var notifications = notifications.doc(Email).current;
+        console.log(required, owned)
+        res.setHeader('Content-Type', 'application/json');
+        res.send(JSON.stringify({ "notficications", notifications}));
+    }
+});
 
 router.get('/books', function(req, res, next) {
     var Email = req.email;
