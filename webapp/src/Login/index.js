@@ -12,6 +12,7 @@ class LoginContainer extends Component {
       await app
         .auth()
         .signInWithEmailAndPassword(email.value, password.value);
+      window.email = email.value;
       this.props.history.push("/");
     } catch (error) {
       alert(error);

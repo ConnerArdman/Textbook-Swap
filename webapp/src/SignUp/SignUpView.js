@@ -25,7 +25,7 @@ const SignUpView = ({ onSubmit }) => {
         </label>
       </div>
       <div className="button-container">
-         <button type="submit">Log in</button>
+         <button type="submit">Sign Up</button>
       </div>
       </form>
     </div>
