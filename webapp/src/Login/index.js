@@ -2,16 +2,16 @@ import React, { Component } from "react";
 import { withRouter } from "react-router";
 import app from "../base";
 
-import SignUpView from "./SignUpView";
+import LoginView from "./LoginView";
 
-class SignUpContainer extends Component {
-  handleSignUp = async event => {
+class LoginContainer extends Component {
+  handleLogin = async event => {
     event.preventDefault();
     const { email, password } = event.target.elements;
     try {
       await app
         .auth()
-        .createUserWithEmailAndPassword(email.value, password.value);
+        .signInWithEmailAndPassword(email.value, password.value);
       this.props.history.push("/");
     } catch (error) {
       alert(error);
@@ -19,8 +19,8 @@ class SignUpContainer extends Component {
   };
 
   render() {
-    return <SignUpView onSubmit={this.handleSignUp} />;
+    return <LoginView onSubmit={this.handleLogin} />;
   }
 }
 
-export default withRouter(SignUpContainer);
+export default withRouter(LoginContainer);
