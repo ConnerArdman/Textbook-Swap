@@ -21,6 +21,15 @@ export function getBookInformation(isbns) {
    return fetch(apiEndpoint + isbnParam + apiExtraParams).then(checkStatus).then(JSON.parse).catch(console.log);
 }
 
+export function getMatches(email) {
+   const url = 'https://textbookswapbackend.appspot.com/notifications?email=';
+   return fetch(url + email, {
+      headers: {
+         'Content-Type': 'application/x-www-form-urlencoded'
+      }
+   }).then(checkStatus).then(JSON.parse).catch(console.log);
+}
+
 // Returns a promise of books JSON
 // books_required: [book1, book2, etc]
 // books_owned: [book1, book2, etc]

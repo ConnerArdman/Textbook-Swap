@@ -1,5 +1,6 @@
 import React from "react";
 import BookList from "./BookList";
+import MatchesList from "./MatchesList";
 import "./BookNav.css"
 
 import {postBookRequired, postBookOwned, getBooks} from "../utils/apiUtils";
@@ -25,9 +26,10 @@ export default class BookNav extends React.Component {
   getMySearches() {
     // console.log(this.state);
     getBooks(window.email).then(books => {
+      console.log(books)
       this.setState({
         currentTab: 0,
-        data: books.books_required
+        data: books.books_required != "" ? books.books_required : []
       });
    });
     // // TODO: use util function to request my ISBNs from the server
@@ -39,10 +41,11 @@ export default class BookNav extends React.Component {
   }
 
   getMyPostings() {
+     console.log(getBooks(window.email).then(data=>console.log(data)));
      getBooks(window.email).then(books => {
          this.setState({
            currentTab: 1,
-           data: books.books_owned
+           data: books.books_owned != "" ? books.books_owned : []
          });
      });
 
@@ -83,16 +86,20 @@ export default class BookNav extends React.Component {
   render() {
     return (
       <div>
-        <BookList
-          isbnList={this.state.data}></BookList>
-        <div className="newBook">
-           <input
-            name="ISBN"
-            placeholder="ISBN"
-            onChange={e => this.setState({currentAddedBook: e.target.value})}
-           />
-           <button onClick={this.sendBook}>new book</button>
-        </div>
+      {this.state.currentTab !== 2 ? (
+         <div>
+         <BookList
+            isbnList={this.state.data}>
+         </BookList>
+         <div className="newBook">
+            <input
+             name="ISBN"
+             placeholder="ISBN"
+             onChange={e => this.setState({currentAddedBook: e.target.value})}
+            />
+            <button onClick={this.sendBook}>new book</button>
+         </div></div>) : <MatchesList></MatchesList>
+      }
         <div className="booknav">
           <nav className="nav nav-pills nav-fill">
               <a className={"nav-item nav-link" + (this.state.currentTab === 0 ? " active" : "")}
@@ -105,7 +112,7 @@ export default class BookNav extends React.Component {
 
               <a className={"nav-item nav-link" + (this.state.hasMatches ? "" : " disabled") + (this.state.currentTab === 2 ? " active" : "") }
                 href="#"
-                onClick={(this.state.hasMatches ?  this.getMyMatches : undefined)}>Matches</a>
+                onClick={(this.getMyMatches)}>Matches</a>
           </nav>
         </div>
       </div>
