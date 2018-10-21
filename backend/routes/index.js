@@ -163,7 +163,7 @@ router.get('/notifications', function(req, res, next){
             
             console.log(required, owned)
             res.setHeader('Content-Type', 'application/json');
-            res.send(JSON.stringify({ "notficications": notifications}));
+            res.send(JSON.stringify({ "notfications": notifications}));
         });
     }
 });
