@@ -154,20 +154,23 @@ setInterval(function(){
 }, 1200000 /*every 20 mins*/);
 
 router.get('/notifications', function(req, res, next){
-    var Email = req.email;
+    var Email = req.body.email;
     if(Email === undefined){
         console.log("Post did not contain a necessary param.");
         res.status('400').end();
     } else {
-        var notifications = notifications.doc(Email).current;
-        console.log(required, owned)
-        res.setHeader('Content-Type', 'application/json');
-        res.send(JSON.stringify({ "notficications", notifications}));
+            var notifications = notifications.doc(Email).get().then( doc => {
+            
+            console.log(required, owned)
+            res.setHeader('Content-Type', 'application/json');
+            res.send(JSON.stringify({ "notficications": notifications}));
+        });
     }
 });
 
+// might be broken :(
 router.get('/books', function(req, res, next) {
-    var Email = req.email;
+    var Email = req.body.email;
 
     if(Email === undefined){
         console.log("Post did not contain a necessary param.");
