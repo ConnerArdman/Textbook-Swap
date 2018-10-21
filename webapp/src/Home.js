@@ -1,8 +1,9 @@
 import React from "react";
+import BookNav from "./components/BookNav";
 
 const Home = () => {
   return (
-    <h1>Home</h1>
+    <BookNav isbns={[]}></BookNav>
   );
 };
 

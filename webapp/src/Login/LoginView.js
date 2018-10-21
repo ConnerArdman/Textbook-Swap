@@ -1,10 +1,10 @@
 import React from "react";
-import '../Login/login.css';
+import './login.css';
 
-const SignUpView = ({ onSubmit }) => {
+const LoginView = ({ onSubmit }) => {
   return (
     <div className="login-container">
-      <h1>Sign Up</h1>
+      <h1>Log In</h1>
       <form onSubmit={onSubmit}>
       <div className="form-container">
         <label>
@@ -32,4 +32,4 @@ const SignUpView = ({ onSubmit }) => {
   );
 };
 
-export default SignUpView;
+export default LoginView;

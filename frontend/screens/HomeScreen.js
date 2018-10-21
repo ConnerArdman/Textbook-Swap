@@ -2,66 +2,83 @@ import React from 'react';
 import {
   Image,
   Platform,
+  SectionList,
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { WebBrowser } from 'expo';
-
-import { MonoText } from '../components/StyledText';
-
+import { getBookInformation } from '../utils/apiUtils'
 export default class HomeScreen extends React.Component {
+
   static navigationOptions = {
     header: null,
   };
 
-  render() {
-    return (
-      <View style={styles.container}>
-        <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-          <View style={styles.welcomeContainer}>
-            <Image
-              source={
-                __DEV__
-                  ? require('../assets/images/robot-dev.png')
-                  : require('../assets/images/robot-prod.png')
-              }
-              style={styles.welcomeImage}
-            />
-          </View>
+  constructor(props) {
+    super(props)
+    this.state = {
+      bookData: []
+    };
+  
+  }
 
-          <View style={styles.getStartedContainer}>
-            {this._maybeRenderDevelopmentModeWarning()}
-
-            <Text style={styles.getStartedText}>Get started by opening</Text>
-
-            <View style={[styles.codeHighlightContainer, styles.homeScreenFilename]}>
-              <MonoText style={styles.codeHighlightText}>screens/HomeScreen.js</MonoText>
-            </View>
-
-            <Text style={styles.getStartedText}>
-              Change this text and your app will automatically reload.
-            </Text>
-          </View>
-
-          <View style={styles.helpContainer}>
-            <TouchableOpacity onPress={this._handleHelpPress} style={styles.helpLink}>
-              <Text style={styles.helpLinkText}>Help, it didn’t automatically reload!</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-
-        <View style={styles.tabBarInfoContainer}>
-          <Text style={styles.tabBarInfoText}>This is a tab bar. You can edit it in:</Text>
-
-          <View style={[styles.codeHighlightContainer, styles.navigationFilename]}>
-            <MonoText style={styles.codeHighlightText}>navigation/MainTabNavigator.js</MonoText>
-          </View>
-        </View>
-      </View>
+  componentDidMount() {
+    var self = this;
+    getBookInformation(["0201558025", "9780262533058", "0345803485"]).then(
+      function(data){
+        self.setState({
+          bookData: Object.values(data)
+        });
+      }
     );
+  }
+
+
+
+  render() {   
+    console.log(this.state.bookData);
+    if (typeof this.state.bookData === "undefined" || this.state.bookData.length == 0) {
+      return (
+        <View style={styles.container}>
+          <Text>Add a book!</Text>
+        </View>
+      )
+    } else {        
+      return (
+        <View style={styles.container}>
+          <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+              <SectionList
+                sections={[
+                  {title: 'Able to swap', data: this.state.bookData}
+                ]}
+                renderItem={({item}) => 
+                  <View style={styles.bookitem}>
+                    <Image
+                      style={{width: 50, height: 50}}
+                      source={{uri: item.cover.medium }}
+                    />
+                    <View style={styles.booktext}>
+                      <Text style={styles.booktitle}>{item.title}</Text>
+                      <Text style={styles.bookauthors}>{
+                        typeof item.authors === "undefined" || item.authors.length === 0 ? "Author(s) unavailable" :
+                        item.authors.map((x)=>(x.name)).join(", ")
+                      }</Text>
+                        
+                      
+                    </View>
+                  </View>
+                }
+        
+                renderSectionHeader={({section}) => 
+                <Text style={styles.listheader}>{section.title}</Text>}
+                keyExtractor={(item, index) => index}
+              />
+          </ScrollView>
+        </View>
+      );
+    }
   }
 
   _maybeRenderDevelopmentModeWarning() {
@@ -102,6 +119,31 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  bookitem: {
+    padding: 10,
+    display: "flex",
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    width: '100%'
+  },
+  listheader: {
+    fontSize: 24,
+    backgroundColor: '#eee',
+    paddingLeft: 10,
+  },
+  booktext: {
+    display: "flex",
+    flexDirection: 'column',
+  },
+
+  booktitle: {
+    fontSize: 16,
+    paddingLeft: 10,
+  },
+  bookauthors: {
+    fontSize: 12,
+    paddingLeft: 10,
   },
   developmentModeText: {
     marginBottom: 20,

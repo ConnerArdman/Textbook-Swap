@@ -112,14 +112,17 @@ var books_offered = db.collection('books_owned');
 var users_requesting_book = db.collection('users_wanting_book');
 var users_offering_book = db.collection('users_with_book');
 
+// maps user emails -> notifications that they'll get when they make an API request for notifications
+var notifications = db.collection('notifications')
+
 function traceback(origUser, origTitle, booksMap, usersMap) {
-  var queue = [[[origUser, origTitle]]];
+  var queue = [[{email: origUser, book: origTitle}]];
   while (queue.length > 0) {
     var path = queue.shift()
     if (path.length > 5) {
       return [];
     }
-    var curTitle = path[path.length - 1][1];
+    var curTitle = path[path.length - 1].book;
     if (booksMap.has(curTitle)) {
       for (var user in booksMap.get(curTitle)) {
         if (usersMap.has(user)) {
@@ -127,7 +130,7 @@ function traceback(origUser, origTitle, booksMap, usersMap) {
             if (user == origUser && title == origTitle) {
               return path;
             }
-            queue.push(path.concat([user, title]));
+            queue.push(path.concat({email: user, book: title}));
           }
         }
       }
@@ -135,59 +138,80 @@ function traceback(origUser, origTitle, booksMap, usersMap) {
   }
 }
 
-function removeFromDatabase(trace, isRequest, books_requested, books_offered, users_requesting_book, users_offering_book) {
-  var prev = trace[trace.length - 1][1];
+function removeFromDatabase(trace, books_requested, books_offered, users_requesting_book, users_offering_book) {
+  var prev = trace[trace.length - 1].book;
   for (var pair in trace) {
-    var user = pair[0];
-    var title = pair[1];
-    if (isRequest) {
-      books_offered.get(prev).splice(books_offered.get(prev).indexOf(user), 1);
-      users_offering_book.get(user).splice(users_offering_book.get(user).indexOf(prev), 1);
-      books_requested.get(title).splice(books_requested.get(title).indexOf(user), 1);
-      users_requesting_book.get(user).splice(users_requesting_book.get(user).indexOf(title), 1);
-    } else {
-      books_offered.get(title).splice(books_offered.get(title).indexOf(user), 1);
-      users_offering_book.get(user).splice(users_offering_book.get(user).indexOf(title), 1);
-      books_requested.get(prev).splice(books_requested.get(prev).indexOf(user), 1);
-      users_requesting_book.get(user).splice(users_requesting_book.get(user).indexOf(prev), 1);
-    }
+    var user = pair.email;
+    var title = pair.book;
+    books_offered.get(prev).splice(books_offered.get(prev).indexOf(user), 1);
+    users_offering_book.get(user).splice(users_offering_book.get(user).indexOf(prev), 1);
+    books_requested.get(title).splice(books_requested.get(title).indexOf(user), 1);
+    users_requesting_book.get(user).splice(users_requesting_book.get(user).indexOf(title), 1);
     prev = title;
   }
 }
 
 function findMatches(username, requests, offers, books_requested, books_offered, users_requesting_book, users_offering_book) {
   if (requests.length > offers.length) {
-    return [[], []];
+    return [];
   }
   users_requesting_book.set(username, users_requesting_book.get(username).concat(requests));
   users_offering_book.set(username, users_offering_book.get(username).concat(offers));
   var requestMatches = [];
-  var offerMatches = [];
+  // var offerMatches = [];
   for (var request in requests) {
     var requestTrace = traceback(username, request, books_offered, users_requesting_book);
     if (requestTrace.length > 0) {
       requestMatches.push(requestTrace);
-      removeFromDatabase(requestTrace, true, books_requested, books_offered, users_requesting_book, users_offering_book);
+      removeFromDatabase(requestTrace, books_requested, books_offered, users_requesting_book, users_offering_book);
     }
   }
+  /*
   for (var offer in offers) {
     var offerTrace = traceback(username, offer, books_requested, users_offering_book);
     if (offerTrace.length > 0) {
       offerMatches.push(offerTrace);
       removeFromDatabase(requestTrace, false, books_requested, books_offered, users_requesting_book, users_offering_book);
     }
-  }
-  return [requestMatches, offerMatches];
+  }*/
+  return requestMatches;
 }
+/*
+{
+email : asdf@jkl.com
+// array of pairs of email addresses and books
+// clockwise cycle order
+matches : [{email: asdf@jkl.com, book : 21234135}, {email: tre@qgrg.com, book: 626452345}]
+}
+*/
 
 // this code runs periodically
 setInterval(function(){
     books_requested.get().then(all_books_required => {
-        books_offeredd.get().then(all_books_owned => {
+        books_offered.get().then(all_books_owned => {
             users_requesting_book.get().then(all_users_wanting_book => {
                 users_offering_book.get().then(all_users_with_book => {
-                    var allMatches = [];
-                    for (var user in users_requesting_book)
+                    notifications.get().then(all_users_with_book => {
+                      var allMatches = [];
+                      var usersIt = users_requesting_book.keys();
+                      for (let user = usersIt.next(); user.done != true; user = usersIt.next()) {
+                        var username = user.value;
+                        var userMatches = findMatches(username, users_requesting_book.get(username), books_requested, books_offered, users_requesting_book, users_offering_book);
+                        if (userMatches.length > 0) {
+                          allMatches.push(userMatches);
+                        }
+                      }
+                      for (var match in allMatches) {
+                        for (var pair in match) {
+                          var username = pair.email;
+                          if (notifications.has(username)) {
+                            notifications.get(username).push(match);
+                          } else {
+                            notifications.set(username, [match]);
+                          }
+                        }
+                      }
+                    })
                 })
             })
         })
@@ -219,19 +243,48 @@ function upsert(table, keyName, key, valueListName, value) {
     });
 }
 
+router.get('/notifications', function(req, res, next){
+    var Email = req.query.email;
+    if(Email === undefined){
+        console.log("Post did not contain a necessary param.");
+        res.status('400').end();
+    } else {
+            notifications.doc(Email).get().then( doc => {
+
+            res.setHeader('Content-Type', 'application/json');
+            if (doc.exists){
+                console.log(doc.data().matches)
+                res.send(JSON.stringify({ "notifications": doc.data().matches}));
+            } else {
+                res.send(JSON.stringify({ "notifications" : ""}));
+            }
+        });
+    }
+});
+
 router.get('/books', function(req, res, next) {
-    var Email = req.email;
+    var Email = req.query.email;
 
     if(Email === undefined){
         console.log("Post did not contain a necessary param.");
         res.status('400').end();
     } else {
-        var required = books_required.doc(Email).books;
-        var owned = books_owned.doc(Email).books;
-        console.log(required, owned)
-        res.setHeader('Content-Type', 'application/json');
-        res.send(JSON.stringify({ "books_required" : required,
-                                "books_owned" : owned}));
+        books_required.doc(Email).get().then( required => {
+            books_owned.doc(Email).get().then( owned => {
+                req = ""
+                own = ""
+                if (required.exists) {
+                    req = required.data().books;
+                }
+                if (owned.exists){
+                    own = owned.data().books;
+                }
+                console.log(req, own)
+                res.setHeader('Content-Type', 'application/json');
+                res.send(JSON.stringify({ "books_required" : req,
+                        "books_owned" : own}));
+            });
+        });
     }
 });
 

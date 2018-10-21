@@ -1,0 +1,18 @@
+div.bookitem {
+    display: inline-flex;
+}
+div.booktext {
+    padding-left: 10px;
+    display: "flex";
+}
+div.booktitle {
+    font-size: 16pt;
+}
+div.bookauthors {
+    font-size: 8pt;
+}
+img.bookimage {
+    background: 50% 50% no-repeat; /* 50% 50% centers image in div */
+    width: 50px;
+    height: 50px;
+}

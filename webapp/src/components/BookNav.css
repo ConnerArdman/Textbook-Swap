@@ -1,0 +1,12 @@
+div.booknav {
+    position: fixed;
+    bottom: 0px;
+    background: rgb(255, 255, 255);
+    color: rgb(0,122,255);
+    width: 100%;
+}
+
+a.active {
+    color: #fff;
+    background: rgb(0,122,255);
+}
