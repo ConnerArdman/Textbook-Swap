@@ -110,9 +110,7 @@ var books_owned = db.collection('books_owned');
 
 router.get('/books', function(req, res, next) {
     var Email = req.email;
-    console.log(Email);
-    // THIS LINE IS A HACK, REMOVE IT
-    Email = "yaacov.tarko@gmail.com"
+
     if(Email === undefined){
         console.log("Post did not contain a necessary param.");
         res.status('400').end();
